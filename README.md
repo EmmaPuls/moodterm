@@ -4,7 +4,10 @@
 
 I want to create a lightweight terminal application that allows me to use a mouse and keyboard to edit commands cleanly.
 
-I'm writing this for MacOS in Swift as it's my favourite dev environment, no plans to extend support to other OS's.
+I'm writing this for MacOS as it's my favourite dev environment, no plans to extend support to other OS's.
+
+Current tech stack:
+- Rust
 
 ## Updates
 
