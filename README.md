@@ -7,7 +7,7 @@ I want to create a lightweight terminal application that allows me to use a mous
 I'm writing this for MacOS as it's my favourite dev environment, no plans to extend support to other OS's.
 
 Current tech stack:
-- Rust
+- Rus
 
 ## Updates
 
