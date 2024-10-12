@@ -16,10 +16,13 @@ Current tech stack:
 #### Changes
 - Switching to using Rust
 - Created a simple pty terminal emulator
+- Added a basic UI using cacao
 
 #### Next steps
 - Learning more Rust
-- Creating a UI to use the terminal emulator
+- Create modules to seperate the concerns of my program
+- Add user interfaces for reading and writing to the terminal
+- Passing the terminal emulator to the UI
 
 ### 2024-09-28
 #### Changes
