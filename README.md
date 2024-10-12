@@ -8,6 +8,16 @@ I'm writing this for MacOS in Swift as it's my favourite dev environment, no pla
 
 ## Updates
 
+### 2024-10-12
+
+#### Changes
+- Switching to using Rust
+- Created a simple pty terminal emulator
+
+#### Next steps
+- Learning more Rust
+- Creating a UI to use the terminal emulator
+
 ### 2024-09-28
 #### Changes
 - Have communication between terminal and application
