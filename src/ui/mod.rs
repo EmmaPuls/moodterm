@@ -4,11 +4,16 @@ use cacao::appkit::menu::{Menu, MenuItem};
 use cacao::appkit::window::{Window, WindowConfig};
 use cacao::appkit::{App, AppDelegate};
 
-pub fn start_app() {
+use crate::terminal_evaluation::TerminalEmulator;
+
+pub fn start_app(terminal_emulator: &mut TerminalEmulator) {
     App::new(
         "com.moodterm.ui",
         BasicApp {
-            window: Window::with(WindowConfig::default(), text_input::AppWindow::new())
+            window: Window::with(
+                WindowConfig::default(),
+                text_input::AppWindow::new(terminal_emulator),
+            ),
         },
     )
     .run();

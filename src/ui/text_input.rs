@@ -7,6 +7,8 @@ use cacao::{
     view::View,
 };
 
+use crate::terminal_evaluation::{self, TerminalEmulator};
+
 const TOP: f64 = 20.0;
 const SPACING: f64 = 20.0;
 const WIDTH: f64 = 280.0;
@@ -40,7 +42,15 @@ impl TextFieldDelegate for ConsoleLogger {
 }
 
 impl AppWindow {
-    pub fn new() -> Self {
+    pub fn new(terminal_emulator: &mut TerminalEmulator) -> Self {
+        let mut user_input = String::new();
+        // Start the terminal emulation in a separate thread
+        // Pass in the user input and receive the output
+        let output: String = terminal_emulator.start_terminal_emulation(&user_input);
+
+        let mut callback_to_set_user_input = |input: String| {
+            user_input = input;
+        };
         AppWindow {
             non_editable_input: {
                 let input = TextField::with(ConsoleLogger);
@@ -52,6 +62,11 @@ impl AppWindow {
                     width: WIDTH,
                     height: HEIGHT / 2.0,
                 });
+
+                let mut new_value: String = String::new();
+                new_value.push_str(&input.get_value());
+                new_value.push_str(&output);
+                input.set_text(&new_value);
                 input
             },
             editable_input: {
@@ -66,6 +81,7 @@ impl AppWindow {
                     width: WIDTH,
                     height: HEIGHT / 2.0,
                 });
+                callback_to_set_user_input(input.get_value());
                 input
             },
             content: View::new(),
