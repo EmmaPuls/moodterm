@@ -11,6 +11,14 @@ Current tech stack:
 
 ## Updates
 
+### 2024-10-13
+
+#### Changes
+- Added text input and output elements to AppKit GUI
+
+#### Thoughts/ Problems
+- AppKit is not thread safe, I have to find a way to update the GUI in the main thread.
+
 ### 2024-10-12
 
 #### Changes
