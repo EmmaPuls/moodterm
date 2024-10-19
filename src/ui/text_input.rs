@@ -1,11 +1,7 @@
 use cacao::{
-    appkit::window::{Window, WindowDelegate},
-    control::{Control, ControlSize},
-    geometry::Rect,
-    input::{TextField, TextFieldDelegate},
-    layout::{Layout, LayoutConstraint},
-    view::View,
+    appkit::window::{Window, WindowDelegate}, control::{Control, ControlSize}, geometry::Rect, input::{TextField, TextFieldDelegate}, layout::{Layout, LayoutConstraint}, view::View
 };
+use std::{os::fd::BorrowedFd, sync::{Arc, Mutex}};
 
 const TOP: f64 = 20.0;
 const SPACING: f64 = 20.0;
@@ -16,10 +12,11 @@ const HEIGHT: f64 = 280.0;
 pub struct ConsoleLogger;
 
 #[derive(Debug)]
-pub struct AppWindow {
+pub struct TextInputOutputWindow {
     non_editable_input: TextField<ConsoleLogger>,
     editable_input: TextField<ConsoleLogger>,
-    content: View,
+    content: Arc<Mutex<View>>, // Wrap View in Arc<Mutex<...>>
+    pty_fd: Arc<Mutex<i32>>, // Add a field to store the pseudoterminal file descriptor
 }
 
 impl TextFieldDelegate for ConsoleLogger {
@@ -39,9 +36,9 @@ impl TextFieldDelegate for ConsoleLogger {
     }
 }
 
-impl AppWindow {
-    pub fn new() -> Self {
-        AppWindow {
+impl TextInputOutputWindow {
+    pub fn new(pty_fd: i32) -> Self {
+        TextInputOutputWindow {
             non_editable_input: {
                 let input = TextField::with(ConsoleLogger);
                 input.set_enabled(false);
@@ -68,50 +65,60 @@ impl AppWindow {
                 });
                 input
             },
-            content: View::new(),
+            content: Arc::new(Mutex::new(View::new())), // Initialize View
+            pty_fd: Arc::new(Mutex::new(pty_fd)), // Initialize the pseudoterminal file descriptor
         }
+    }
+
+    pub fn send_input_to_pty(&self, input: &str) {
+        let fd = {
+            let guard = self.pty_fd.lock().unwrap();
+            *guard
+        };
+
+        let borrowed_fd = unsafe { BorrowedFd::borrow_raw(fd) };
+
+        nix::unistd::write(borrowed_fd, input.as_bytes()).expect("Failed to write to PTY");
+    }
+
+    pub fn update_output(&self, output: &str) {
+        self.non_editable_input.set_text(output);
     }
 }
 
-impl WindowDelegate for AppWindow {
+#[derive(Debug, Clone)]
+pub struct TextInputOutputWindowWrapper(pub Arc<Mutex<TextInputOutputWindow>>);
+
+impl WindowDelegate for TextInputOutputWindowWrapper {
     const NAME: &'static str = "WindowDelegate";
 
     fn did_load(&mut self, window: Window) {
         window.set_title("Input Logger Example");
         window.set_minimum_content_size(400., 400.);
 
-        self.content.add_subview(&self.non_editable_input);
-        self.content.add_subview(&self.editable_input);
-        window.set_content_view(&self.content);
+        {
+            let window_instance = self.0.lock().unwrap();
+            let content = window_instance.content.lock().unwrap();
+            content.add_subview(&window_instance.non_editable_input);
+            content.add_subview(&window_instance.editable_input);
+            window.set_content_view(&*content);
+        }
+
+        let binding = self.0.lock().unwrap();
+        let non_editable_input = &binding.non_editable_input;
+        let editable_input = &binding.editable_input;
+        let content = binding.content.lock().unwrap();
 
         LayoutConstraint::activate(&[
-            self.non_editable_input
-                .top
-                .constraint_equal_to(&self.content.top),
-            self.non_editable_input
-                .left
-                .constraint_equal_to(&self.content.left),
-            self.non_editable_input
-                .right
-                .constraint_equal_to(&self.content.right),
-            self.non_editable_input
-                .height
-                .constraint_equal_to_constant(HEIGHT / 2.0),
-            self.editable_input
-                .top
-                .constraint_equal_to(&self.non_editable_input.bottom),
-            self.editable_input
-                .left
-                .constraint_equal_to(&self.content.left),
-            self.editable_input
-                .right
-                .constraint_equal_to(&self.content.right),
-            self.editable_input
-                .bottom
-                .constraint_equal_to(&self.content.bottom),
-            self.editable_input
-                .height
-                .constraint_equal_to_constant(HEIGHT / 2.0),
+            non_editable_input.top.constraint_equal_to(&content.top),
+            non_editable_input.left.constraint_equal_to(&content.left),
+            non_editable_input.right.constraint_equal_to(&content.right),
+            non_editable_input.height.constraint_equal_to_constant(HEIGHT / 2.0),
+            editable_input.top.constraint_equal_to(&non_editable_input.bottom),
+            editable_input.left.constraint_equal_to(&content.left),
+            editable_input.right.constraint_equal_to(&content.right),
+            editable_input.bottom.constraint_equal_to(&content.bottom),
+            editable_input.height.constraint_equal_to_constant(HEIGHT / 2.0),
         ]);
 
         // Window Settings

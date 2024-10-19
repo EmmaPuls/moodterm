@@ -3,12 +3,15 @@ mod text_input;
 use cacao::appkit::menu::{Menu, MenuItem};
 use cacao::appkit::window::{Window, WindowConfig};
 use cacao::appkit::{App, AppDelegate};
+use text_input::TextInputOutputWindowWrapper;
+use std::sync::{Arc, Mutex};
+pub use text_input::TextInputOutputWindow;
 
-pub fn start_app() {
+pub fn start_app(app_window: Arc<Mutex<TextInputOutputWindow>>) {
     App::new(
         "com.moodterm.ui",
         BasicApp {
-            window: Window::with(WindowConfig::default(), text_input::AppWindow::new())
+            window: Window::with(WindowConfig::default(), TextInputOutputWindowWrapper(app_window)),
         },
     )
     .run();
@@ -16,7 +19,7 @@ pub fn start_app() {
 
 #[derive(Debug)]
 struct BasicApp {
-    window: Window<text_input::AppWindow>,
+    window: Window<TextInputOutputWindowWrapper>,
 }
 
 impl AppDelegate for BasicApp {

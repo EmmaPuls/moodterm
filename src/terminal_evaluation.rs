@@ -4,8 +4,9 @@ use nix::sys::termios::{tcgetattr, tcsetattr, SetArg, Termios};
 use nix::unistd::{execvp, read, write};
 use std::ffi::CString;
 use std::io::{self, Read, Write};
-use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd};
+use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::os::unix::io::{AsFd, BorrowedFd};
+use std::sync::{Arc, Mutex};
 
 fn set_raw_mode(fd: BorrowedFd) -> Termios {
     let termios = tcgetattr(fd).expect("Failed to get terminal attributes");
@@ -38,7 +39,7 @@ fn spawn_shell() -> OwnedFd {
 // Starts terminal emulation in the current thread
 // Creates a new thread to read from the shell and write to stdout
 // Reads from stdin and writes to the shell
-pub fn start_terminal_emulation() {
+pub fn start_terminal_emulation(pty_fd: Arc<Mutex<RawFd>>, update_output: Arc<Mutex<dyn Fn(String) + Send>>) {
     let stdin_fd = unsafe { BorrowedFd::borrow_raw(0) }; // File descriptor for stdin
 
     // Set terminal to raw mode
@@ -48,29 +49,23 @@ pub fn start_terminal_emulation() {
     let master_fd = spawn_shell();
 
     // Create a thread to read from the shell and write to stdout
-    // Cloning the master_fd allows us to use it concurrently via the original and the clone.
     let master_fd_clone = master_fd.try_clone().expect("Failed to clone master_fd");
     std::thread::spawn(move || {
         let mut buffer = [0u8; 1024];
         loop {
-            let n =
-                read(master_fd_clone.as_raw_fd(), &mut buffer).expect("Failed to read from PTY");
+            let n = read(master_fd_clone.as_raw_fd(), &mut buffer).expect("Failed to read from PTY");
             if n == 0 {
                 break;
             }
-            io::stdout()
-                .write_all(&buffer[..n])
-                .expect("Failed to write to stdout");
-            io::stdout().flush().expect("Failed to flush stdout");
+            let output = String::from_utf8_lossy(&buffer[..n]).to_string();
+            (update_output.lock().unwrap())(output);
         }
     });
 
     // Read from stdin and write to the shell
     let mut buffer = [0u8; 1024];
     loop {
-        let n = io::stdin()
-            .read(&mut buffer)
-            .expect("Failed to read from stdin");
+        let n = io::stdin().read(&mut buffer).expect("Failed to read from stdin");
         if n == 0 {
             break;
         }
