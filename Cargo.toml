@@ -1,8 +1,9 @@
 [package]
 name = "moodterm"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 nix = {version = "0.29.0", features = ["term", "process"]}
 cacao = {version = "0.3.2", features = ["appkit"]}
+mol = "0.3.0"
