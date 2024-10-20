@@ -19,5 +19,5 @@ Current tech stack:
 
 ## Updates
 
-I'll be writing updates in CHANGELOG.md from now on, including my own observations and notes about what I've been reading about while building.
+I'll be writing updates in [changelog](CHANGELOG.md) from now on, including my own observations and notes about what I've been reading about while building.
 
