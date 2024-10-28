@@ -4,6 +4,13 @@
 
 ### Minor Changes
 
+- Added Tabs for creating multiple terminal sessions
+- Log in to the terminal with the users settings (home directory & preferred shell)
+
+## 0.3.0
+
+### Minor Changes
+
 #### Switched to SwiftUI & Swift
 And I have a terminal GUI! It works! 
 

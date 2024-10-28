@@ -4,9 +4,22 @@
 //
 //  Created by Emma Puls on 27/10/2024.
 //
+//  This code was inspired by:
+//  - Alacritty:
+//    - the defaultShellCommand from `alacritty_terminal/src/tty/unix.rs`
+//
 
 import Foundation
+import Darwin
 
+/// Sets the terminal to raw mode for the given file descriptor.
+/// 
+/// - Parameter fd: The file descriptor of the terminal.
+/// - Returns: The original terminal attributes before setting raw mode.
+/// 
+/// This function modifies the terminal settings to disable canonical mode,
+/// echoing, and other input processing features, allowing for raw input
+/// handling.
 func setRawMode(fd: Int32) -> termios {
     var termios = termios()
     tcgetattr(fd, &termios)
@@ -16,72 +29,84 @@ func setRawMode(fd: Int32) -> termios {
     return termios
 }
 
+/// Restores the terminal settings to a previous state.
+/// 
+/// This function takes a file descriptor and a `termios` structure, and restores
+/// the terminal settings associated with the file descriptor to the state described
+/// by the `termios` structure.
+///
+/// - Parameters:
+///   - fd: The file descriptor representing the terminal.
+///   - termios: A `termios` structure containing the terminal settings to be restored.
 func restoreTerminal(fd: Int32, termios: termios) {
     var termios = termios
     tcsetattr(fd, TCSANOW, &termios)
 }
 
+/// Retrieves the current user's information.
+/// 
+/// - Returns: A tuple containing the username, home directory, and shell path of the current user.
+func getUserInfo() -> (username: String, homeDirectory: String, shellPath: String) {
+    let uid = getuid()
+    let passwd = getpwuid(uid)
+    let username = String(cString: passwd!.pointee.pw_name)
+    let homeDirectory = String(cString: passwd!.pointee.pw_dir)
+    let shellPath = String(cString: passwd!.pointee.pw_shell)
+    return (username, homeDirectory, shellPath)
+}
+
+/// Spawns a new shell process.
+/// 
+/// This function creates and runs a new shell process, returning the process ID (PID) of the spawned shell.
+/// 
+/// - Returns: The process ID (PID) of the spawned shell as an `Int32`.
 func spawnShell() -> Int32 {
     var master: Int32 = 0
     var slave: Int32 = 0
     openpty(&master, &slave, nil, nil, nil)
-    
-    var pid: pid_t = 0
-    let fileActions = UnsafeMutablePointer<posix_spawn_file_actions_t?>.allocate(capacity: 1)
-    posix_spawn_file_actions_init(fileActions)
-    posix_spawn_file_actions_addclose(fileActions, master)
-    posix_spawn_file_actions_adddup2(fileActions, slave, STDIN_FILENO)
-    posix_spawn_file_actions_adddup2(fileActions, slave, STDOUT_FILENO)
-    posix_spawn_file_actions_adddup2(fileActions, slave, STDERR_FILENO)
-    posix_spawn_file_actions_addclose(fileActions, slave)
 
-    let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/sh"
-    let argv: [UnsafeMutablePointer<CChar>?] = [strdup(shell), nil]
-    let envp: [UnsafeMutablePointer<CChar>?] = [nil]
+    let (username, homeDirectory, shellPath) = getUserInfo()
 
-    let status = posix_spawn(&pid, shell, fileActions, nil, argv, envp)
-    posix_spawn_file_actions_destroy(fileActions)
+    // Set environment variables
+    setenv("HOME", homeDirectory, 1)
+    setenv("USER", username, 1)
+    setenv("LOGNAME", username, 1)
+    setenv("SHELL", shellPath, 1)
 
-    if status == 0 {
-        // Parent process
-        close(slave)
-        return master
-    } else {
-        fatalError("posix_spawn failed")
+    // Create the shell process
+    let shellProcess = defaultShellCommand(shell: shellPath, user: username)
+
+    // Set up the process
+    let process = Process()
+    process.executableURL = shellProcess.executableURL
+    process.arguments = shellProcess.arguments
+    process.environment = ProcessInfo.processInfo.environment
+    process.standardInput = FileHandle(fileDescriptor: slave)
+    process.standardOutput = FileHandle(fileDescriptor: slave)
+    process.standardError = FileHandle(fileDescriptor: slave)
+    process.currentDirectoryURL = URL(fileURLWithPath: homeDirectory) // Set the working directory to the user's home directory
+
+    do {
+        try process.run()
+    } catch {
+        fatalError("Failed to start the shell: \(error)")
     }
+
+    // Close the slave file descriptor in the parent process
+    close(slave)
+
+    return master
 }
 
-func startTerminalEmulation() {
-    let stdinFd = STDIN_FILENO
-
-    // Set terminal to raw mode
-    let originalTermios = setRawMode(fd: stdinFd)
-
-    // Spawn the shell
-    let masterFd = spawnShell()
-
-    // Create a thread to read from the shell and write to stdout
-    DispatchQueue.global().async {
-        var buffer = [UInt8](repeating: 0, count: 1024)
-        while true {
-            let n = read(masterFd, &buffer, buffer.count)
-            if n <= 0 {
-                break
-            }
-            FileHandle.standardOutput.write(Data(buffer[0..<n]))
-        }
-    }
-
-    // Read from stdin and write to the shell
-    var buffer = [UInt8](repeating: 0, count: 1024)
-    while true {
-        let n = read(stdinFd, &buffer, buffer.count)
-        if n <= 0 {
-            break
-        }
-        write(masterFd, buffer, n)
-    }
-
-    // Restore terminal settings
-    restoreTerminal(fd: stdinFd, termios: originalTermios)
+/// Creates and returns a `Process` configured to run a default shell command for a given user.
+/// 
+/// - Parameters:
+///   - shell: The shell to be used (e.g., "/bin/bash").
+///   - user: The username for which the shell command is to be executed.
+/// - Returns: A `Process` object configured with the specified shell and user.
+func defaultShellCommand(shell: String, user: String) -> Process {
+    let shellProcess = Process()
+    shellProcess.executableURL = URL(fileURLWithPath: "/usr/bin/login")
+    shellProcess.arguments = ["-flp", user, shell]
+    return shellProcess
 }
