@@ -13,16 +13,17 @@ struct TerminalView: View {
     @ObservedObject var viewModel: TerminalViewModel
     @State private var userInput: String = ""
     @State private var textEditorId = UUID()
+    @Binding var fontSizeFactor: Double
 
     var body: some View {
         VStack {
             ScrollViewReader { scrollViewProxy in
                 ScrollView {
                     TextEditor(text: $viewModel.terminalOutput)
-                        .font(.system(.body, design: .monospaced))
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .id(textEditorId)
+                        .dynamicFont(.monospaced, factor: fontSizeFactor)
                 }
                 .onChange(of: viewModel.terminalOutput) {
                     withAnimation {
@@ -36,14 +37,14 @@ struct TerminalView: View {
                     viewModel.sendInput(userInput + "\n")
                     userInput = ""
                 }
-                .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
                 .frame(maxWidth: .infinity)
+                .dynamicFont(.body, factor: fontSizeFactor)
         }
         .padding()
     }
 }
 
 #Preview {
-    TerminalView(viewModel: TerminalViewModel())
+    TerminalView(viewModel: TerminalViewModel(), fontSizeFactor: Binding<Double>.constant(2.5))
 }
