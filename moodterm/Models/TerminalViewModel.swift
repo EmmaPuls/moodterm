@@ -1,8 +1,13 @@
 //
-//  TerminalViewModel.swift
-//  moodterm
+//  This file contains the implementation of the TerminalViewModel class, which is responsible for managing the state and behavior of the terminal emulation within the moodterm application. The TerminalViewModel class conforms to the ObservableObject, Codable, and Equatable protocols, and provides functionality to start terminal emulation, send input to the terminal, and manage terminal output.
 //
-//  Created by Emma Puls on 27/10/2024.
+//  The TerminalViewModel class includes the following key features:
+//  - Initialization with a unique identifier (UUID)
+//  - Setting up terminal emulation, including configuring terminal settings and spawning a shell
+//  - Managing terminal output using Combine framework
+//  - Sending input to the terminal
+//  - Encoding and decoding support for persistence
+//  - Equatable conformance for comparing instances
 //
 
 import Combine
@@ -33,16 +38,15 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
             .store(in: &cancellables)
     }
 
-    
     /// Starts the terminal emulation process.
     ///
     /// This function initializes and begins the emulation of a terminal session.
     /// It sets up necessary configurations and resources required for the terminal
     /// to function properly.
-    /// 
+    ///
     /// Sets a terminal to raw mode, spawns a shell, and creates a thread to read
     /// from the shell and update the terminal output.
-    /// 
+    ///
     /// Once the terminal emulation is stopped, the terminal settings are restored
     func startTerminalEmulation() {
         let stdinFd = STDIN_FILENO
@@ -72,7 +76,6 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
         // Restore terminal settings
         restoreTerminal(fd: stdinFd, termios: originalTermios)
     }
-
 
     /// Sends input to the terminal.
     func sendInput(_ input: String) {
