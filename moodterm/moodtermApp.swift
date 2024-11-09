@@ -33,7 +33,7 @@ struct moodtermApp: App {
                 .onAppear {
                     selectedTab = tabs.first?.id
                 }
-                .onChange(of: tabs) { _ in
+                .onChange(of: tabs) { 
                     saveTabs(tabs)
                 }
         }
