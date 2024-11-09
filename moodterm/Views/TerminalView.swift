@@ -1,3 +1,5 @@
+import SwiftUI
+
 /// A view that represents the terminal interface in the application.
 /// This view is responsible for displaying the terminal content and handling user interactions.
 ///
@@ -8,10 +10,6 @@
 /// The view consists of a scrollable text editor that displays the terminal output and a text field for user input.
 /// The text editor automatically scrolls to the bottom when new content is added.
 /// The user input is sent to the view model when the return key is pressed.
-///
-
-import SwiftUI
-
 struct TerminalView: View {
     @ObservedObject var viewModel: TerminalViewModel
     @State private var userInput: String = ""

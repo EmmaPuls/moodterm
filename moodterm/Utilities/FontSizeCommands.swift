@@ -1,9 +1,11 @@
-/// This file contains the implementation of commands related to font size adjustments
-/// in the MoodTerm application. The commands defined here allow users to increase,
-/// decrease, or reset the font size within the application.
-
 import SwiftUI
 
+/// Commands related to font size adjustments.
+/// Allows the user to increase or decrease the font size of the app.
+///
+/// Keyboard shortcuts 
+/// - **Cmd +** _increase font size_
+/// - **Cmd -** _decrease font size_
 struct FontSizeCommands: Commands {
     @Binding var fontSizeFactor: Double
 
