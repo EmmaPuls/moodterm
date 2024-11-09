@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Tab: Identifiable, Codable, Equatable {
+class Tab: Identifiable, Codable, Equatable, Observable {
     let id: UUID
     var title: String
     var viewModel: TerminalViewModel

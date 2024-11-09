@@ -5,7 +5,6 @@
 //  Created by Emma Puls on 28/10/2024.
 //
 
-
 import SwiftUI
 
 /// Handles the tabs for each TerminalView
@@ -19,14 +18,16 @@ struct TabView: View {
                 ScrollView(.horizontal) {
                     HStack {
                         ForEach($tabs) { $tab in
-                            TabButton(tab: $tab, selectedTab: $selectedTab, closeTab: closeTab, tabsCount: tabs.count)
+                            TabButton(
+                                tab: $tab, selectedTab: $selectedTab, closeTab: closeTab,
+                                tabsCount: tabs.count)
                         }
 
                         Button(action: addTab) {
                             Image(systemName: "plus")
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                        }
+                        }.accessibilityLabel("Add new terminal tab")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -34,11 +35,15 @@ struct TabView: View {
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let selectedTab = selectedTab, let tab = tabs.first(where: { $0.id == selectedTab }) {
+            if let selectedTab = selectedTab, let tab = tabs.first(where: { $0.id == selectedTab })
+            {
                 TerminalView(viewModel: tab.viewModel)
             }
         }
         .onAppear {
+            if tabs.isEmpty {
+                addTab()
+            }
             selectedTab = tabs.first?.id
         }
     }
@@ -88,6 +93,7 @@ struct TabButton: View {
                                     .shadow(color: .black, radius: 2, x: 0, y: 2)
                             }
                             .buttonStyle(PlainButtonStyle())
+                            .accessibilityLabel("Close tab")
                         }
                     }
                 )
@@ -97,6 +103,7 @@ struct TabButton: View {
                 .onHover { hovering in
                     isHovering = hovering
                 }
+                .accessibilityIdentifier("Tab_\(tab.id.uuidString)")
         }
         .padding(.vertical, 4)
     }

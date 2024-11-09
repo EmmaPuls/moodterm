@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "F0E5B593-2F3C-423C-826E-51ACE58F8CF8",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:moodterm.xcodeproj",
+      "identifier" : "3F8078C12CCE2D1F00F00DE7",
+      "name" : "moodterm"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:moodterm.xcodeproj",
+        "identifier" : "3F8078D22CCE2D2100F00DE7",
+        "name" : "moodtermTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:moodterm.xcodeproj",
+        "identifier" : "3F8078DC2CCE2D2100F00DE7",
+        "name" : "moodtermUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

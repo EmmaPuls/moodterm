@@ -24,7 +24,7 @@ struct TerminalView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .id(textEditorId)
                 }
-                .onChange(of: viewModel.terminalOutput) { _ in
+                .onChange(of: viewModel.terminalOutput) {
                     withAnimation {
                         scrollViewProxy.scrollTo(textEditorId, anchor: .bottom)
                     }
