@@ -1,3 +1,4 @@
+// TODO: Write tests for TerminalManager
 import Combine
 import Darwin
 import Foundation
@@ -14,7 +15,7 @@ class TerminalManager {
     let outputSubject = PassthroughSubject<String, Never>()
 
     /// Starts the terminal emulation process.
-    func startTerminalEmulation() {
+    func startTerminalEmulation(initialDirectory: String? = nil) {
         let stdinFd = STDIN_FILENO
 
         // Set terminal to raw mode
@@ -24,7 +25,8 @@ class TerminalManager {
         setenv("TERM", "xterm-256color", 1)
 
         // Spawn the shell
-        masterFd = spawnShell()
+        print("initialDirectory: \(initialDirectory)")
+        masterFd = spawnShell(initialDirectory: initialDirectory)
 
         // Create a thread to read from the shell and update terminalOutput
         DispatchQueue.global().async { [weak self] in
@@ -82,24 +84,12 @@ class TerminalManager {
         tcsetattr(fd, TCSANOW, &termios)
     }
 
-    /// Retrieves the current user's information.
-    ///
-    /// - Returns: A tuple containing the username, home directory, and shell path of the current user.
-    private func getUserInfo() -> (username: String, homeDirectory: String, shellPath: String) {
-        let uid = getuid()
-        let passwd = getpwuid(uid)
-        let username = String(cString: passwd!.pointee.pw_name)
-        let homeDirectory = String(cString: passwd!.pointee.pw_dir)
-        let shellPath = String(cString: passwd!.pointee.pw_shell)
-        return (username, homeDirectory, shellPath)
-    }
-
     /// Spawns a new shell process.
     ///
     /// This function creates and runs a new shell process, returning the process ID (PID) of the spawned shell.
     ///
     /// - Returns: The process ID (PID) of the spawned shell as an `Int32`.
-    private func spawnShell() -> Int32 {
+    private func spawnShell(initialDirectory: String? = nil) -> Int32 {
         var master: Int32 = 0
         var slave: Int32 = 0
         openpty(&master, &slave, nil, nil, nil)
@@ -112,6 +102,9 @@ class TerminalManager {
         setenv("LOGNAME", username, 1)
         setenv("SHELL", shellPath, 1)
 
+        // Write shell configuration to emit OSC 1337 sequences
+        configureShell(for: shellPath, homeDirectory: homeDirectory)
+
         // Create the shell process
         let shellProcess = defaultShellCommand(shell: shellPath, user: username)
 
@@ -123,7 +116,8 @@ class TerminalManager {
         process.standardInput = FileHandle(fileDescriptor: slave)
         process.standardOutput = FileHandle(fileDescriptor: slave)
         process.standardError = FileHandle(fileDescriptor: slave)
-        process.currentDirectoryURL = URL(fileURLWithPath: homeDirectory)  // Set the working directory to the user's home directory
+        print("initialDirectory: \(initialDirectory)")
+        process.currentDirectoryURL = initialDirectory != nil ? URL(fileURLWithPath: initialDirectory!) : URL(fileURLWithPath: homeDirectory)  // Set the working directory to the initial directory or the user's home directory
 
         do {
             try process.run()
@@ -135,6 +129,69 @@ class TerminalManager {
         close(slave)
 
         return master
+    }
+
+    /// Configures the shell to emit OSC 1337 sequences for the current directory.
+    ///
+    /// - Parameters:
+    ///   - shellPath: The path to the shell executable.
+    ///   - homeDirectory: The home directory of the user.
+    private func configureShell(for shellPath: String, homeDirectory: String) {
+        let shellConfig: String
+        if shellPath.contains("zsh") {
+            shellConfig = """
+            function precmd() {
+              echo -ne "\\033]1337;CurrentDir=$(pwd)\\007"
+            }
+            autoload -Uz add-zsh-hook
+            add-zsh-hook precmd precmd
+            """
+            let zshrcPath = "\(homeDirectory)/.zshrc"
+            appendToFile(at: zshrcPath, content: shellConfig)
+        } else if shellPath.contains("bash") {
+            shellConfig = """
+            function precmd() {
+              echo -ne "\\033]1337;CurrentDir=$(pwd)\\007"
+            }
+            PROMPT_COMMAND=precmd
+            """
+            let bashrcPath = "\(homeDirectory)/.bashrc"
+            appendToFile(at: bashrcPath, content: shellConfig)
+        }
+    }
+
+    /// Appends content to a file at the specified path.
+    ///
+    /// - Parameters:
+    ///   - path: The path to the file.
+    ///   - content: The content to append to the file.
+    private func appendToFile(at path: String, content: String) {
+        do {
+            let fileHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: path))
+            fileHandle.seekToEndOfFile()
+            if let data = content.data(using: .utf8) {
+                fileHandle.write(data)
+            }
+            fileHandle.closeFile()
+        } catch {
+            do {
+                try content.write(toFile: path, atomically: true, encoding: .utf8)
+            } catch {
+                print("Failed to write to file at path \(path): \(error)")
+            }
+        }
+    }
+
+    /// Retrieves the current user's information.
+    ///
+    /// - Returns: A tuple containing the username, home directory, and shell path of the current user.
+    private func getUserInfo() -> (username: String, homeDirectory: String, shellPath: String) {
+        let uid = getuid()
+        let passwd = getpwuid(uid)
+        let username = String(cString: passwd!.pointee.pw_name)
+        let homeDirectory = String(cString: passwd!.pointee.pw_dir)
+        let shellPath = String(cString: passwd!.pointee.pw_shell)
+        return (username, homeDirectory, shellPath)
     }
 
     /// Creates and returns a `Process` configured to run a default shell command for a given user.
