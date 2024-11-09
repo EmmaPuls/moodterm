@@ -1,18 +1,11 @@
-/// A SwiftUI view that handles the tabs for each TerminalView.
-///
-/// The `TabView` struct is responsible for displaying and managing multiple terminal tabs. It allows users to add, select, and close tabs. Each tab is represented by a `TabButton` view.
+import SwiftUI
+
+/// The `TabView` struct is responsible for displaying and managing multiple terminal tabs. It allows users to add, select, and close tabs.
 ///
 /// - Properties:
 ///    - `tabs`: A binding to an array of `Tab` objects representing the open tabs.
 ///    - `selectedTab`: A binding to the UUID of the currently selected tab.
 ///    - `fontSizeFactor`: A binding to a `Double` that controls the font size factor for dynamic font scaling.
-///
-/// - Nested Types:
-///    - `TabButton`: A SwiftUI view representing a button for a single tab in the tab bar. It includes a text field for the tab title, a close button, and dynamic font scaling.
-
-import SwiftUI
-
-/// Handles the tabs for each TerminalView
 struct TabView: View {
     @Binding var tabs: [Tab]
     @Binding var selectedTab: UUID?
@@ -73,7 +66,7 @@ struct TabView: View {
 }
 
 /// Represents a tab button in the tab bar
-struct TabButton: View {
+private struct TabButton: View {
     @Binding var tab: Tab
     @Binding var selectedTab: UUID?
     var closeTab: (UUID) -> Void

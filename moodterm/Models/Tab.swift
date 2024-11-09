@@ -1,19 +1,11 @@
-//
-//  This file defines the `Tab` class, which represents a tab in the application.
-//  The `Tab` class conforms to the `Identifiable`, `Codable`, `Equatable`, and `Observable` protocols.
-//
-//  Properties:
-//  - `id`: A unique identifier for the tab.
-//  - `title`: The title of the tab.
-//  - `viewModel`: The view model associated with the tab.
-//
-
-
 import Foundation
 
+///  Defines the `Tab` class, which represents a terminal tab.
 class Tab: Identifiable, Codable, Equatable, Observable {
     let id: UUID
+    /// The title of the tab.
     var title: String
+    // TODO: Consider making this a protocol
     var viewModel: TerminalViewModel
 
     init(id: UUID = UUID(), title: String, viewModel: TerminalViewModel) {
