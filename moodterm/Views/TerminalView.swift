@@ -19,26 +19,35 @@ struct TerminalView: View {
         VStack {
             ScrollViewReader { scrollViewProxy in
                 ScrollView {
+                    // TODO: TexEditor does not fill the height of the ScrollView
                     TextEditor(text: $viewModel.terminalOutput)
                         .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .scrollContentBackground(.hidden)
                         .id(textEditorId)
                         .dynamicFont(.monospaced, factor: fontSizeFactor)
+                        .frame(minHeight: 0, maxHeight: .infinity)
+                        .layoutPriority(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .onChange(of: viewModel.terminalOutput) {
                     withAnimation {
                         scrollViewProxy.scrollTo(textEditorId, anchor: .bottom)
                     }
-                    textEditorId = UUID() // Force refresh
+                    textEditorId = UUID()  // Force refresh
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.black)
+                .padding(.horizontal, 8)
+                .cornerRadius(4)
             }
+
             TextField("Enter command", text: $userInput)
                 .onSubmit {
                     viewModel.sendInput(userInput + "\n")
                     userInput = ""
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .dynamicFont(.body, factor: fontSizeFactor)
         }
         .padding()

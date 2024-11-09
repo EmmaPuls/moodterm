@@ -25,10 +25,11 @@ struct TabView: View {
                         }
 
                         Button(action: addTab) {
-                            Image(systemName: "plus")
-                                .resizable()
+                            Text("+")
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
+                                .cornerRadius(4)
+                                .dynamicFont(.body, factor: fontSizeFactor)
                         }.accessibilityLabel("Add new terminal tab")
                     }
                 }
