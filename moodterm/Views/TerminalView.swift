@@ -1,14 +1,17 @@
-//
-//  ContentView.swift
-//  moodterm
-//
-//  Created by Emma Puls on 27/10/2024.
-//
+/// A view that represents the terminal interface in the application.
+/// This view is responsible for displaying the terminal content and handling user interactions.
+///
+/// - Parameters:
+///    - viewModel: An observed object that manages the terminal's data and logic.
+///    - fontSizeFactor: A binding that controls the font size factor for the terminal text and input field.
+///
+/// The view consists of a scrollable text editor that displays the terminal output and a text field for user input.
+/// The text editor automatically scrolls to the bottom when new content is added.
+/// The user input is sent to the view model when the return key is pressed.
+///
 
 import SwiftUI
 
-/// A view that represents the terminal interface in the application.
-/// This view is responsible for displaying the terminal content and handling user interactions.
 struct TerminalView: View {
     @ObservedObject var viewModel: TerminalViewModel
     @State private var userInput: String = ""

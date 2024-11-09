@@ -1,9 +1,13 @@
 //
-//  Tab.swift
-//  moodterm
+//  This file defines the `Tab` class, which represents a tab in the application.
+//  The `Tab` class conforms to the `Identifiable`, `Codable`, `Equatable`, and `Observable` protocols.
 //
-//  Created by Emma Puls on 28/10/2024.
+//  Properties:
+//  - `id`: A unique identifier for the tab.
+//  - `title`: The title of the tab.
+//  - `viewModel`: The view model associated with the tab.
 //
+
 
 import Foundation
 
