@@ -11,6 +11,7 @@ import SwiftUI
 struct TabView: View {
     @Binding var tabs: [Tab]
     @Binding var selectedTab: UUID?
+    @Binding var fontSizeFactor: Double
 
     var body: some View {
         VStack {
@@ -20,13 +21,15 @@ struct TabView: View {
                         ForEach($tabs) { $tab in
                             TabButton(
                                 tab: $tab, selectedTab: $selectedTab, closeTab: closeTab,
-                                tabsCount: tabs.count)
+                                tabsCount: tabs.count, fontSizeFactor: $fontSizeFactor)
                         }
 
                         Button(action: addTab) {
-                            Image(systemName: "plus")
+                            Text("+")
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
+                                .cornerRadius(4)
+                                .dynamicFont(.body, factor: fontSizeFactor)
                         }.accessibilityLabel("Add new terminal tab")
                     }
                 }
@@ -37,7 +40,7 @@ struct TabView: View {
 
             if let selectedTab = selectedTab, let tab = tabs.first(where: { $0.id == selectedTab })
             {
-                TerminalView(viewModel: tab.viewModel)
+                TerminalView(viewModel: tab.viewModel, fontSizeFactor: $fontSizeFactor)
             }
         }
         .onAppear {
@@ -71,6 +74,7 @@ struct TabButton: View {
     var closeTab: (UUID) -> Void
     var tabsCount: Int
     @State private var isHovering = false
+    @Binding var fontSizeFactor: Double
 
     var body: some View {
         HStack {
@@ -104,6 +108,7 @@ struct TabButton: View {
                     isHovering = hovering
                 }
                 .accessibilityIdentifier("Tab_\(tab.id.uuidString)")
+                .dynamicFont(.monospaced, factor: fontSizeFactor)
         }
         .padding(.vertical, 4)
     }
@@ -112,5 +117,7 @@ struct TabButton: View {
 #Preview {
     let tab1 = Tab(title: "Tab 1", viewModel: TerminalViewModel())
     let tab2 = Tab(title: "Tab 2", viewModel: TerminalViewModel())
-    TabView(tabs: .constant([tab1, tab2]), selectedTab: .constant(tab1.id))
+    TabView(
+        tabs: .constant([tab1, tab2]), selectedTab: .constant(tab1.id),
+        fontSizeFactor: Binding<Double>.constant(1.2))
 }

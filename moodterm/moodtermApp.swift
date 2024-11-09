@@ -26,16 +26,20 @@ import SwiftUI
 struct moodtermApp: App {
     @State private var tabs: [Tab] = loadTabs()
     @State private var selectedTab: UUID?
+    @State private var fontSizeFactor: Double = 1.0
 
     var body: some Scene {
         WindowGroup {
-            TabView(tabs: $tabs, selectedTab: $selectedTab)
+            TabView(tabs: $tabs, selectedTab: $selectedTab, fontSizeFactor: $fontSizeFactor)
                 .onAppear {
                     selectedTab = tabs.first?.id
                 }
                 .onChange(of: tabs) { 
                     saveTabs(tabs)
                 }
+        }
+        .commands{
+            FontSizeCommands(fontSizeFactor: $fontSizeFactor)
         }
     }
 
