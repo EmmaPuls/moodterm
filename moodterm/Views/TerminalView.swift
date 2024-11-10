@@ -18,28 +18,11 @@ struct TerminalView: View {
 
     var body: some View {
         VStack {
-            ScrollViewReader { scrollViewProxy in
-                ScrollView {
-                    // TODO: TexEditor does not fill the height of the ScrollView
-                    TextEditor(text: $viewModel.terminalOutput)
-                        .padding()
-                        .scrollContentBackground(.hidden)
-                        .id(textEditorId)
-                        .dynamicFont(.monospaced, factor: fontSizeFactor)
-                        .frame(minHeight: 0, maxHeight: .infinity)
-                        .layoutPriority(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .onChange(of: viewModel.terminalOutput) {
-                    withAnimation {
-                        scrollViewProxy.scrollTo(textEditorId, anchor: .bottom)
-                    }
-                    textEditorId = UUID()  // Force refresh
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color("textBackgroundColor"))
-                .padding(.horizontal, 8)
-                .cornerRadius(4)
+            VStack {
+                Spacer()  // Pushes the TextEditor to the bottom
+                TerminalTextView(
+                    text: $viewModel.terminalOutput, fontSizeFactor: $fontSizeFactor
+                )
             }
 
             TextField("Enter command", text: $userInput)
@@ -47,14 +30,22 @@ struct TerminalView: View {
                     viewModel.sendInput(userInput + "\n")
                     userInput = ""
                 }
-                .padding(.horizontal, 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .dynamicFont(.body, factor: fontSizeFactor)
+                .textFieldStyle(.plain)
+                // Internal padding
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color("textBackgroundColor"))
+                .cornerRadius(4)
+                // External padding
+                .padding(.horizontal, 8)
+
         }
-        .padding()
+        .padding(.bottom)
+        .padding(.horizontal)
     }
 }
 
 #Preview {
-    TerminalView(viewModel: TerminalViewModel(), fontSizeFactor: Binding<Double>.constant(2.5))
+    TerminalView(viewModel: TerminalViewModel(), fontSizeFactor: Binding<Double>.constant(1))
 }
