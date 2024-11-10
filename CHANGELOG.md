@@ -1,5 +1,12 @@
 # moodterm
 
+## 0.3.2
+
+### Patch Changes
+
+- - Make all app colors adhere to MacOS appearance
+  - Save and restore the apps scaling when user closes and reopens the app
+
 ## 0.3.1
 
 ### Patch Changes
