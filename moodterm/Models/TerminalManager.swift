@@ -115,7 +115,6 @@ class TerminalManager {
         process.standardInput = FileHandle(fileDescriptor: slave)
         process.standardOutput = FileHandle(fileDescriptor: slave)
         process.standardError = FileHandle(fileDescriptor: slave)
-        print("initialDirectory: \(initialDirectory)")
         process.currentDirectoryURL = initialDirectory != nil ? URL(fileURLWithPath: initialDirectory!) : URL(fileURLWithPath: homeDirectory)  // Set the working directory to the initial directory or the user's home directory
 
         do {
