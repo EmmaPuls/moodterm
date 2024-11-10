@@ -25,7 +25,6 @@ class TerminalManager {
         setenv("TERM", "xterm-256color", 1)
 
         // Spawn the shell
-        print("initialDirectory: \(initialDirectory)")
         masterFd = spawnShell(initialDirectory: initialDirectory)
 
         // Create a thread to read from the shell and update terminalOutput
