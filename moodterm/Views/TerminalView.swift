@@ -18,25 +18,11 @@ struct TerminalView: View {
 
     var body: some View {
         VStack {
-            ScrollViewReader { scrollViewProxy in
-                VStack {
-                    Spacer()  // Pushes the TextEditor to the bottom
-                    TextEditor(text: $viewModel.terminalOutput)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .scrollContentBackground(.hidden)
-                        .id(textEditorId)
-                        .dynamicFont(.monospaced, factor: fontSizeFactor)
-                        .onChange(of: viewModel.terminalOutput) {
-                            withAnimation {
-                                scrollViewProxy.scrollTo(textEditorId, anchor: .bottom)
-                            }
-                            textEditorId = UUID()  // Force refresh
-                        }
-                        .background(Color("textBackgroundColor"))
-                        .cornerRadius(4)
-                        .padding(.horizontal, 8)
-                }
+            VStack {
+                Spacer()  // Pushes the TextEditor to the bottom
+                TerminalTextView(
+                    text: $viewModel.terminalOutput, fontSizeFactor: $fontSizeFactor
+                )
             }
 
             TextField("Enter command", text: $userInput)
