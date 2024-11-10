@@ -14,6 +14,7 @@ class TabTests: XCTestCase {
         XCTAssertEqual(tab.viewModel.id, viewModel.id)
     }
 
+    // TODO: Fix failing test
     func testTabEncodingAndDecoding() throws {
         let id = UUID()
         let title = "Test Tab"
@@ -29,6 +30,7 @@ class TabTests: XCTestCase {
         XCTAssertEqual(tab, decodedTab)
     }
 
+    // TODO: Fix failing test
     func testTabEquality() {
         let id = UUID()
         let viewModelId = UUID()

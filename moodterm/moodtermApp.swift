@@ -1,66 +1,72 @@
-//
-//  moodtermApp.swift
-//  moodterm
-//
-//  Created by Emma Puls on 27/10/2024.
-//
-
+import Combine
 import SwiftUI
 
-/**
- The main application structure for the moodterm app.
-
- This struct conforms to the `App` protocol and serves as the entry point for the application.
- It manages the state of the tabs and the selected tab, and handles loading and saving of tabs
- using `UserDefaults`.
-
- - Properties:
-    - tabs: An array of `Tab` objects representing the tabs in the application.
-    - selectedTab: An optional UUID representing the currently selected tab.
-
- - Methods:
-    - saveTabs(_:): Saves the given array of `Tab` objects to `UserDefaults`.
-    - loadTabs(): Loads an array of `Tab` objects from `UserDefaults`, or returns a default tab if loading fails.
- */
 @main
-struct moodtermApp: App {
-    @State private var tabs: [Tab] = loadTabs()
-    @State private var selectedTab: UUID?
-    @State private var fontSizeFactor: Double = 1.0
+struct MoodtermApp: App {
+    @StateObject private var appState = AppState()
 
     var body: some Scene {
         WindowGroup {
-            TabView(tabs: $tabs, selectedTab: $selectedTab, fontSizeFactor: $fontSizeFactor)
-                .onAppear {
-                    selectedTab = tabs.first?.id
-                }
-                .onChange(of: tabs) { 
-                    saveTabs(tabs)
-                }
+            TabView(
+                tabs: $appState.tabs, selectedTab: $appState.selectedTab,
+                fontSizeFactor: $appState.fontSizeFactor
+            )
+            .onAppear {
+                appState.selectedTab = appState.tabs.first?.id
+                appState.observeTabChanges()
+            }
+            .onChange(of: appState.tabs) { _ in
+                appState.observeTabChanges()
+            }
         }
-        .commands{
-            FontSizeCommands(fontSizeFactor: $fontSizeFactor)
-        }
-    }
-
-    private func saveTabs(_ tabs: [Tab]) {
-        do {
-            let data = try JSONEncoder().encode(tabs)
-            UserDefaults.standard.set(data, forKey: "savedTabs")
-        } catch {
-            print("Failed to save tabs: \(error)")
+        .commands {
+            FontSizeCommands(fontSizeFactor: $appState.fontSizeFactor)
         }
     }
 
-    private static func loadTabs() -> [Tab] {
+    static func loadTabs() -> [Tab] {
         guard let data = UserDefaults.standard.data(forKey: "savedTabs") else {
             return [Tab(title: "Tab 1", viewModel: TerminalViewModel())]
         }
         do {
-            return try JSONDecoder().decode([Tab].self, from: data)
+            // print the current directory from the first tab
+            let tabs = try JSONDecoder().decode([Tab].self, from: data)
+            print("Loaded directory: \(tabs.first?.currentDirectory ?? "")")
+            return tabs
         } catch {
             print("Failed to load tabs: \(error)")
             return [Tab(title: "Tab 1", viewModel: TerminalViewModel())]
+        }
+    }
+}
+
+class AppState: ObservableObject {
+    @Published var tabs: [Tab] = MoodtermApp.loadTabs()
+    @Published var selectedTab: UUID?
+    @Published var fontSizeFactor: Double = 1.0
+    var cancellables = Set<AnyCancellable>()
+
+    func observeTabChanges() {
+        cancellables.removeAll()
+        for tab in tabs {
+            tab.$currentDirectory
+                // Debounce to make sure that the tabs are saved after the currentDirectory has been updated
+                .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.saveTabs(self?.tabs ?? [])
+                }
+                .store(in: &cancellables)
+        }
+    }
+
+    func saveTabs(_ tabs: [Tab]) {
+        do {
+            // print the current directory from the first tab
+            print("Saving directory: \(tabs.first?.currentDirectory ?? "")")
+            let data = try JSONEncoder().encode(tabs)
+            UserDefaults.standard.set(data, forKey: "savedTabs")
+        } catch {
+            print("Failed to save tabs: \(error)")
         }
     }
 }
