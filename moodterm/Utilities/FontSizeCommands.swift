@@ -12,14 +12,22 @@ struct FontSizeCommands: Commands {
     var body: some Commands {
         CommandMenu("Font Size") {
             Button("Increase Font Size") {
-                fontSizeFactor += 0.1
+                increaseFontSize()
             }
             .keyboardShortcut("+", modifiers: [.command])
 
             Button("Decrease Font Size") {
-                fontSizeFactor = max(0.1, fontSizeFactor - 0.1)
+                decreaseFontSize()
             }
             .keyboardShortcut("-", modifiers: [.command])
         }
+    }
+
+    func increaseFontSize() {
+        fontSizeFactor += 0.1
+    }
+
+    func decreaseFontSize() {
+        fontSizeFactor = max(0.1, fontSizeFactor - 0.1)
     }
 }
