@@ -8,7 +8,7 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
     @Published var currentDirectory: String = ""
     private var terminalManager: TerminalManager
     private var middlewareStack: TerminalMiddlewareStack
-    private var oscProcessor: OSCProcessor
+    private var oscProcessor: OSCMiddleware
     var cancellables = Set<AnyCancellable>()
     let id: UUID
 
@@ -16,7 +16,7 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
         self.id = id
         self.terminalManager = terminalManager
         self.middlewareStack = TerminalMiddlewareStack()
-        self.oscProcessor = OSCProcessor()
+        self.oscProcessor = OSCMiddleware()
 
         // Set the initial directory if provided
         if let initialDirectory = initialDirectory {
@@ -69,7 +69,7 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
         // Initialize other properties
         terminalManager = TerminalManager()
         middlewareStack = TerminalMiddlewareStack()
-        oscProcessor = OSCProcessor()
+        oscProcessor = OSCMiddleware()
         cancellables = Set<AnyCancellable>()
 
         // Add OSCProcessor to middleware stack

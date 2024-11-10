@@ -1,18 +1,9 @@
-// TODO: Write test for TerminalMiddleware
-import Foundation
 import Combine
+import Foundation
 
 class TerminalMiddleware {
     var outputToSession: PassthroughSubject<Data, Never> = PassthroughSubject()
     var outputToTerminal: PassthroughSubject<Data, Never> = PassthroughSubject()
-
-    var outputToSessionPublisher: AnyPublisher<Data, Never> {
-        return outputToSession.eraseToAnyPublisher()
-    }
-
-    var outputToTerminalPublisher: AnyPublisher<Data, Never> {
-        return outputToTerminal.eraseToAnyPublisher()
-    }
 
     func feedFromSession(data: Data) {
         outputToTerminal.send(data)

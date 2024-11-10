@@ -29,5 +29,9 @@ final class moodtermUITestsLaunchTests: XCTestCase {
         attachment.name = "Launch Screen"
         attachment.lifetime = .keepAlways
         add(attachment)
+
+        // Add a timeout to prevent hanging
+        let exists = app.wait(for: .runningForeground, timeout: 10)
+        XCTAssertTrue(exists, "App did not launch successfully")
     }
 }

@@ -31,11 +31,12 @@ class Tab: Identifiable, Codable, Equatable, ObservableObject {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
-        currentDirectory = try container.decodeIfPresent(String.self, forKey: .currentDirectory) ?? ""
+        currentDirectory =
+            try container.decodeIfPresent(String.self, forKey: .currentDirectory) ?? ""
         viewModel = try container.decode(TerminalViewModel.self, forKey: .viewModel)
 
-        // Initialize the viewModel with the current directory
-        viewModel = TerminalViewModel(id: id, terminalManager: TerminalManager(), initialDirectory: currentDirectory)
+        // Set viewmodels currentDirectory to the currentDirectory of the tab
+        viewModel.currentDirectory = currentDirectory
 
         // Observe the currentDirectory of the viewModel
         viewModel.$currentDirectory
