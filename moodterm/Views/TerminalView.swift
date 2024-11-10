@@ -37,7 +37,7 @@ struct TerminalView: View {
                     textEditorId = UUID()  // Force refresh
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.black)
+                .background(Color("textBackgroundColor"))
                 .padding(.horizontal, 8)
                 .cornerRadius(4)
             }
