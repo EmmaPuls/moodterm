@@ -7,7 +7,7 @@ struct MoodtermApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppView()
                 .environmentObject(appState)
         }
         .commands {
@@ -27,24 +27,6 @@ struct MoodtermApp: App {
         } catch {
             print("Failed to load tabs: \(error)")
             return [Tab(title: "Tab 1", viewModel: TerminalViewModel())]
-        }
-    }
-}
-
-struct ContentView: View {
-    @EnvironmentObject var appState: AppState
-
-    var body: some View {
-        TabView(
-            tabs: $appState.tabs, selectedTab: $appState.selectedTab,
-            fontSizeFactor: $appState.fontSizeFactor
-        )
-        .onAppear {
-            appState.selectedTab = appState.tabs.first?.id
-            appState.observeTabChanges()
-        }
-        .onChange(of: appState.tabs) {
-            appState.observeTabChanges()
         }
     }
 }

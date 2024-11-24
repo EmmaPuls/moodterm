@@ -6,10 +6,11 @@ class AppState: ObservableObject {
     @Published var selectedTab: UUID?
     @Published var fontSizeFactor: Double {
         didSet {
-            UserDefaults.standard.set(fontSizeFactor, forKey: "fontSizeFactor")
+            debounceSaveFontSizeFactor()
         }
     }
     var cancellables = Set<AnyCancellable>()
+    private var debounceTimer: AnyCancellable?
 
     init() {
         // Load the font size factor from UserDefaults
@@ -24,7 +25,6 @@ class AppState: ObservableObject {
         cancellables.removeAll()
         for tab in tabs {
             tab.$currentDirectory
-                // Debounce to make sure that the tabs are saved after the currentDirectory has been updated
                 .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
                 .sink { [weak self] _ in
                     self?.saveTabs(self?.tabs ?? [])
@@ -41,6 +41,22 @@ class AppState: ObservableObject {
             UserDefaults.standard.set(data, forKey: "savedTabs")
         } catch {
             print("Failed to save tabs: \(error)")
+        }
+    }
+
+    private func debounceSaveFontSizeFactor() {
+        debounceTimer?.cancel()
+        debounceTimer = Just(fontSizeFactor)
+            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .sink { value in
+                UserDefaults.standard.set(value, forKey: "fontSizeFactor")
+            }
+    }
+
+    func removeTab(_ tab: Tab) {
+        if let index = tabs.firstIndex(where: { $0.id == tab.id }) {
+            tabs.remove(at: index)
+            saveTabs(tabs)
         }
     }
 }

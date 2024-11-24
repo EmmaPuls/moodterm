@@ -7,8 +7,7 @@ import SwiftUI
 ///    - `selectedTab`: A binding to the UUID of the currently selected tab.
 ///    - `fontSizeFactor`: A binding to a `Double` that controls the font size factor for dynamic font scaling.
 struct TabView: View {
-    @Binding var tabs: [Tab]
-    @Binding var selectedTab: UUID?
+    @ObservedObject var appState: AppState
     @Binding var fontSizeFactor: Double
 
     var body: some View {
@@ -16,10 +15,10 @@ struct TabView: View {
             HStack {
                 ScrollView(.horizontal) {
                     HStack {
-                        ForEach($tabs) { $tab in
+                        ForEach($appState.tabs) { $tab in
                             TabButton(
-                                tab: $tab, selectedTab: $selectedTab, closeTab: closeTab,
-                                tabsCount: tabs.count, fontSizeFactor: $fontSizeFactor)
+                                tab: $tab, selectedTab: $appState.selectedTab, closeTab: closeTab,
+                                tabsCount: appState.tabs.count, fontSizeFactor: $fontSizeFactor)
                         }
 
                         Button(action: addTab) {
@@ -36,30 +35,33 @@ struct TabView: View {
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let selectedTab = selectedTab, let tab = tabs.first(where: { $0.id == selectedTab })
+            if let selectedTab = appState.selectedTab,
+                let tab = appState.tabs.first(where: { $0.id == selectedTab })
             {
                 TerminalView(viewModel: tab.viewModel, fontSizeFactor: $fontSizeFactor)
             }
         }
         .onAppear {
-            if tabs.isEmpty {
+            if appState.tabs.isEmpty {
                 addTab()
             }
-            selectedTab = tabs.first?.id
+            appState.selectedTab = appState.tabs.first?.id
         }
     }
 
     private func addTab() {
         let newTab = Tab(title: "New Tab", viewModel: TerminalViewModel())
-        tabs.append(newTab)
-        selectedTab = newTab.id
+        appState.tabs.append(newTab)
+        appState.selectedTab = newTab.id
     }
 
-    private func closeTab(_ id: UUID) {
-        if tabs.count > 1 {
-            tabs.removeAll { $0.id == id }
-            if selectedTab == id {
-                selectedTab = tabs.first?.id
+    private func closeTab(_ tabId: UUID) {
+        if let index = appState.tabs.firstIndex(where: { $0.id == tabId }) {
+            withAnimation {
+                appState.tabs.remove(at: index)
+                if appState.selectedTab == tabId {
+                    appState.selectedTab = appState.tabs.first?.id
+                }
             }
         }
     }
@@ -72,6 +74,7 @@ private struct TabButton: View {
     var closeTab: (UUID) -> Void
     var tabsCount: Int
     @State private var isHovering = false
+    @State private var isDeleting = false
     @Binding var fontSizeFactor: Double
 
     var body: some View {
@@ -87,6 +90,9 @@ private struct TabButton: View {
                         Spacer()
                         if isHovering && tabsCount > 1 {
                             Button(action: {
+                                withAnimation {
+                                    isDeleting = true
+                                }
                                 closeTab(tab.id)
                             }) {
                                 Image(systemName: "xmark.circle.fill")
@@ -109,6 +115,10 @@ private struct TabButton: View {
                 .dynamicFont(.monospaced, factor: fontSizeFactor)
         }
         .padding(.vertical, 4)
+        .opacity(isDeleting ? 0 : 1)
+        .scaleEffect(isDeleting ? 0.5 : 1)
+        .animation(.easeInOut(duration: 0.3), value: isDeleting)
+        .transition(.slide)  // Add transition effect
     }
 }
 
@@ -116,6 +126,6 @@ private struct TabButton: View {
     let tab1 = Tab(title: "Tab 1", viewModel: TerminalViewModel())
     let tab2 = Tab(title: "Tab 2", viewModel: TerminalViewModel())
     TabView(
-        tabs: .constant([tab1, tab2]), selectedTab: .constant(tab1.id),
+        appState: AppState(),
         fontSizeFactor: Binding<Double>.constant(1.2))
 }
