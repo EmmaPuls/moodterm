@@ -1,5 +1,11 @@
 # moodterm
 
+## 0.3.4
+
+### Patch Changes
+
+- Refactors the application storage to store user settings in UserDefaults and the tabs as data in Application Support
+
 ## 0.3.3
 
 ### Patch Changes
