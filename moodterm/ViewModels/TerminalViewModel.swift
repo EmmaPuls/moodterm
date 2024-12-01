@@ -57,13 +57,12 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, terminalOutput, currentDirectory
+        case id, currentDirectory
     }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
-        terminalOutput = try container.decodeIfPresent(String.self, forKey: .terminalOutput) ?? ""
         currentDirectory = try container.decodeIfPresent(String.self, forKey: .currentDirectory) ?? ""
 
         // Initialize other properties
@@ -84,7 +83,6 @@ class TerminalViewModel: ObservableObject, Codable, Equatable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(terminalOutput, forKey: .terminalOutput)
         try container.encode(currentDirectory, forKey: .currentDirectory)
     }
 

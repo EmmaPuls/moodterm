@@ -68,8 +68,8 @@ class TabStore: ObservableObject {
     }
 
     func saveTabs(_ tabs: [Tab]) {
+
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted // Enable pretty printing
         do {
             let data = try encoder.encode(tabs)
             if FileManager.default.fileExists(atPath: databaseFileUrl.path) {
