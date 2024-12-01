@@ -12,10 +12,6 @@ struct ContentView: View {
         )
         .onAppear {
             tabStore.selectedTab = tabStore.tabs.first?.id
-            tabStore.observeTabChanges()
-        }
-        .onChange(of: tabStore.tabs) {
-            tabStore.observeTabChanges()
         }
     }
 }
